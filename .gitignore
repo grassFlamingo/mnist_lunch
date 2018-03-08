@@ -1,0 +1,9 @@
+*.so
+MNIST
+temp.py
+__pycache__
+utils/__pycache__
+*.py[cod]
+model_trained.nn
+.vscode
+.ipynb_checkpoints
