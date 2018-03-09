@@ -8,12 +8,14 @@ class NNModel():
     def __init__(self):
         self.fc0 = AfineLayer(28 * 28, 369)
         self.relu0 = ReLULayer()
+        # self.drop0 = DropoutLayer(0.2)
         self.fc1 = AfineLayer(369, 10)
         # self.relu1 = ReLULayer()
 
     def forward(self, x):
         out = self.fc0.forward(x)
-        out = self.relu0.forward(out)
+        # out = self.relu0.forward(out)
+        out = self.drop0.forward(out)
         out = self.fc1.forward(out)
         # out = self.relu1.forward(out)
         return out
@@ -21,6 +23,7 @@ class NNModel():
     def backward(self, dout):
         # dout = self.relu1.backward(dout)
         dout = self.fc1.backward(dout)
+        # dout = self.drop0.backward(dout)
         dout = self.relu0.backward(dout)
         dout = self.fc0.backward(dout)
         return dout
@@ -142,3 +145,25 @@ class ReLULayer():
         dx = np.where(x.data > 0, dout.grad, 0)
         x.grad = dx
         return x
+
+class DropoutLayer():
+    mask = None
+
+    def __init__(self, p):
+        """
+        - p: Dropout parameter. We drop each neuron output with probability p.
+        """
+        np.random.seed(100)
+        self.p = p
+
+    def forward(self, x):
+        x = x.data
+        mask = (np.random.rand(*x.shape) < self.p) / self.p
+        out = x * mask
+        out = out.astype(x.dtype, copy=False)
+        self.mask = mask
+        return uvar.BaseVar(data=out)
+    
+    def backward(self, dout):
+        dx = self.mask * dout.data
+        return uvar.BaseVar(grad=dx)
